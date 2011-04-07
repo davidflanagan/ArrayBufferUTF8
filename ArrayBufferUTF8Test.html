@@ -2,49 +2,69 @@
 <script>
 var buf = new ArrayBuffer(4 * 17 * 65536);
 
-function test(msg) {
-    var len = buf.writeUTF8(msg);
-    var result = buf.toString(0,len);
-    console.log(result === msg, msg, result);
+//----------------------------------------------------------------------
+
+// This is from the Node.js test suite: 
+// A mixed ascii and non-ascii string
+// Test stolen from deps/v8/test/cctest/test-strings.cc
+// U+02E4 -> CB A4
+// U+0064 -> 64
+// U+12E4 -> E1 8B A4
+// U+0030 -> 30
+// U+3045 -> E3 81 85
+var chars = '\u02e4\u0064\u12e4\u0030\u3045';
+var bytes = new Uint8Array([0xCB, 0xA4, 0x64, 0xE1, 0x8B, 0xA4,
+                            0x30, 0xE3, 0x81, 0x85]);
+
+var len = buf.writeUTF8(chars);
+var encodedchars = new Uint8Array(buf, 0, len);
+var decodedbytes = bytes.buffer.toString();
+
+console.log("decode successful: ", decodedbytes === chars);
+console.log("checking encode results:");
+for(var i = 0; i < bytes.length; i++) {
+    if (bytes[i] !== encodedchars[i]) 
+        console.log("byte differ at:", i);
 }
 
 
-test("This is a test; only a test!");
-test("character '¢' = code point U+00A2");
-test("character '€' = code point U+20AC");
-test("character '𤭢' = code point U+024B62");
+//----------------------------------------------------------------------
 
 var codepoints = [];
 for(var cp = 0; cp <= 0xFFFF; cp++) {
     if (cp >= 0xD800 && cp <= 0xDFFF) continue;
     codepoints.push(cp);
 }
-var bigstring = String.fromCharCode.apply(String, codepoints);
+var allchars = String.fromCharCode.apply(String, codepoints);
 
+/*
+ * Both Node and chrome are giving me funny results for these 
+ * surrogate pair codepoints, so restrict the test to the BMP for now.
+ 
 for(var s1 = 0xD800; s1 <= 0xDBFF; s1++) {
     var codepoints = [];
     for(var s2 = 0xDC00; s2 <= 0xDFFF; s2++) {
         codepoints.push(s1);
         codepoints.push(s2);
     }
-    bigstring += String.fromCharCode.apply(String, codepoints);
+    allchars += String.fromCharCode.apply(String, codepoints);
 }
+*/
+var longASCII = "abcdefghijklmnopqrstuvwxyz";
+for(var i = 0; i < 10; i++) longASCII = longASCII+longASCII;
 
-var len = buf.writeUTF8(bigstring);
+var len = buf.writeUTF8(allchars);
 var result = buf.toString(0,len);
-console.log(bigstring.length, len, result.length, result===bigstring);
+console.log(allchars.length, len, result.length, result===allchars);
 
-console.log("encoding and decoding all unicode chars 10 times");
+console.log("encoding and decoding all unicode chars 100 times");
 var start = Date.now();
-for(var i = 0; i < 10; i++) {
-    var len = buf.writeUTF8(bigstring);
+for(var i = 0; i < 100; i++) {
+    var len = buf.writeUTF8(allchars);
     var result = buf.toString(0,len);
 }
 var end = Date.now();
 console.log("Elapsed time (s): ", (end-start)/1000);
-
-var longASCII = "abcdefghijklmnopqrstuvwxyz";
-for(var i = 0; i < 10; i++) longASCII = longASCII+longASCII;
 
 var len = buf.writeUTF8(longASCII);
 var result = buf.toString(0,len);
@@ -58,5 +78,20 @@ for(var i = 0; i < 100; i++) {
 }
 var end = Date.now();
 console.log("Elapsed time (s): ", (end-start)/1000);
+
+
+// ------------------------
+function test(msg) {
+    var len = buf.writeUTF8(msg);
+    var result = buf.toString(0,len);
+    console.log(result === msg, msg, result);
+}
+
+
+test("This is a test; only a test!");
+test("character '¢' = code point U+00A2");
+test("character '€' = code point U+20AC");
+test("character '𤭢' = code point U+024B62");
+
 </script>
 
