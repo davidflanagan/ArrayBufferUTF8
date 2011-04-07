@@ -41,8 +41,8 @@ ArrayBuffer.prototype.writeUTF8 = function(s, start) {
                 fail("Unpaired surrogate");
             }
             
-            var cp = ((c & 0x03FF) << 10) + (d & 0x03FF);
-            
+            var cp = ((c & 0x03FF) << 10) + (d & 0x03FF) + 0x10000;
+
             bytes[b++] = 0xF0 | ((cp & 0x1C0000) >>> 18);
             bytes[b++] = 0x80 | ((cp & 0x03F000) >>> 12);
             bytes[b++] = 0x80 | ((cp & 0x000FC0) >>> 6);
@@ -109,6 +109,7 @@ ArrayBuffer.prototype.toString = function(start, end) {
             if (b4 < 128 || b4 > 191) fail();
             var cp = ((b1 & 0x07) << 18) + ((b2 & 0x3f) << 12) +
                 ((b3 & 0x3f) << 6) + (b4 & 0x3f);
+            cp -= 0x10000;
 
             // Now turn this code point into two surrogate pairs
             charcodes[c++] = 0xd800 + ((cp & 0x0FFC00)>>>10);
