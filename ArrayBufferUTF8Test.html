@@ -1,0 +1,62 @@
+<script src="ArrayBufferUTF8.js"></script>
+<script>
+var buf = new ArrayBuffer(4 * 17 * 65536);
+
+function test(msg) {
+    var len = buf.writeUTF8(msg);
+    var result = buf.toString(0,len);
+    console.log(result === msg, msg, result);
+}
+
+
+test("This is a test; only a test!");
+test("character '¢' = code point U+00A2");
+test("character '€' = code point U+20AC");
+test("character '𤭢' = code point U+024B62");
+
+var codepoints = [];
+for(var cp = 0; cp <= 0xFFFF; cp++) {
+    if (cp >= 0xD800 && cp <= 0xDFFF) continue;
+    codepoints.push(cp);
+}
+var bigstring = String.fromCharCode.apply(String, codepoints);
+
+for(var s1 = 0xD800; s1 <= 0xDBFF; s1++) {
+    var codepoints = [];
+    for(var s2 = 0xDC00; s2 <= 0xDFFF; s2++) {
+        codepoints.push(s1);
+        codepoints.push(s2);
+    }
+    bigstring += String.fromCharCode.apply(String, codepoints);
+}
+
+var len = buf.writeUTF8(bigstring);
+var result = buf.toString(0,len);
+console.log(bigstring.length, len, result.length, result===bigstring);
+
+console.log("encoding and decoding all unicode chars 10 times");
+var start = Date.now();
+for(var i = 0; i < 10; i++) {
+    var len = buf.writeUTF8(bigstring);
+    var result = buf.toString(0,len);
+}
+var end = Date.now();
+console.log("Elapsed time (s): ", (end-start)/1000);
+
+var longASCII = "abcdefghijklmnopqrstuvwxyz";
+for(var i = 0; i < 10; i++) longASCII = longASCII+longASCII;
+
+var len = buf.writeUTF8(longASCII);
+var result = buf.toString(0,len);
+console.log(longASCII.length, len, result.length, result===longASCII);
+
+console.log("encoding and decoding a long ascii string 100 times");
+var start = Date.now();
+for(var i = 0; i < 100; i++) {
+    var len = buf.writeUTF8(longASCII);
+    var result = buf.toString(0,len);
+}
+var end = Date.now();
+console.log("Elapsed time (s): ", (end-start)/1000);
+</script>
+

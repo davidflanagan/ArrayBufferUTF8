@@ -1,0 +1,4 @@
+These are UTF-8 encoding and decoding methods added directly to the
+ArrayBuffer class.  They're currently based on Node's Buffer API.  It
+might make more sense to put them on the DataView class instead,
+however. 
