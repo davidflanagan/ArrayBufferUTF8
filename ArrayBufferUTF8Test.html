@@ -27,7 +27,6 @@ for(var i = 0; i < bytes.length; i++) {
         console.log("byte differ at:", i);
 }
 
-
 //----------------------------------------------------------------------
 
 var codepoints = [];
@@ -36,10 +35,6 @@ for(var cp = 0; cp <= 0xFFFF; cp++) {
     codepoints.push(cp);
 }
 var allchars = String.fromCharCode.apply(String, codepoints);
-
-/*
- * Both Node and chrome are giving me funny results for these 
- * surrogate pair codepoints, so restrict the test to the BMP for now.
  
 for(var s1 = 0xD800; s1 <= 0xDBFF; s1++) {
     var codepoints = [];
@@ -49,14 +44,46 @@ for(var s1 = 0xD800; s1 <= 0xDBFF; s1++) {
     }
     allchars += String.fromCharCode.apply(String, codepoints);
 }
-*/
+
 var longASCII = "abcdefghijklmnopqrstuvwxyz";
 for(var i = 0; i < 10; i++) longASCII = longASCII+longASCII;
+
+//----------------------------------------------------------------------
+// These functions are from
+// http://ecmanaut.blogspot.com/2006/07/encoding-decoding-utf8-in-javascript.html
+// Note that they use binary strings
+
+function encode_utf8( s )
+{
+  return unescape( encodeURIComponent( s ) );
+}
+
+
+function decode_utf8( s )
+{
+  return decodeURIComponent( escape( s ) );
+}
+
+var binary_encoded_allchars = encode_utf8(allchars);
+var s = decode_utf8(binary_encoded_allchars);
+if (s === allchars) console.log("round-tripped with encode_utf8");
+console.log("encoded to # bytes", binary_encoded_allchars.length);
+
+// ----------------------------------------------------------------------
 
 var len = buf.writeUTF8(allchars);
 var result = buf.toString(0,len);
 console.log(allchars.length, len, result.length, result===allchars);
 
+var encodedbytes = new Uint8Array(buf, 0, len);
+for(var i = 0; i < len; i++) {
+    if (encodedbytes[i] !== binary_encoded_allchars.charCodeAt(i)) {
+        console.log("bytes differ at index", i, encodedbytes[i], binary_encoded_allchars.charCodeAt(i));
+        break;
+    }
+}
+
+/*
 console.log("encoding and decoding all unicode chars 100 times");
 var start = Date.now();
 for(var i = 0; i < 100; i++) {
@@ -92,6 +119,6 @@ test("This is a test; only a test!");
 test("character '¢' = code point U+00A2");
 test("character '€' = code point U+20AC");
 test("character '𤭢' = code point U+024B62");
-
+*/
 </script>
 
