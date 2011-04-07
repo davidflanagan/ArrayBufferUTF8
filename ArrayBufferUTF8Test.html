@@ -2,6 +2,19 @@
 <script>
 var buf = new ArrayBuffer(4 * 17 * 65536);
 
+// ------------------------
+function test(msg) {
+    var len = buf.writeUTF8(msg);
+    var result = buf.toString(0,len);
+    console.log(result === msg, msg, result);
+}
+
+test("This is a test; only a test!");
+test("character '¢' = code point U+00A2");
+test("character '€' = code point U+20AC");
+test("character '𤭢' = code point U+024B62");
+
+
 //----------------------------------------------------------------------
 
 // This is from the Node.js test suite: 
@@ -83,10 +96,9 @@ for(var i = 0; i < len; i++) {
     }
 }
 
-/*
-console.log("encoding and decoding all unicode chars 100 times");
+console.log("encoding and decoding all unicode chars 10 times");
 var start = Date.now();
-for(var i = 0; i < 100; i++) {
+for(var i = 0; i < 10; i++) {
     var len = buf.writeUTF8(allchars);
     var result = buf.toString(0,len);
 }
@@ -105,20 +117,5 @@ for(var i = 0; i < 100; i++) {
 }
 var end = Date.now();
 console.log("Elapsed time (s): ", (end-start)/1000);
-
-
-// ------------------------
-function test(msg) {
-    var len = buf.writeUTF8(msg);
-    var result = buf.toString(0,len);
-    console.log(result === msg, msg, result);
-}
-
-
-test("This is a test; only a test!");
-test("character '¢' = code point U+00A2");
-test("character '€' = code point U+20AC");
-test("character '𤭢' = code point U+024B62");
-*/
 </script>
 
